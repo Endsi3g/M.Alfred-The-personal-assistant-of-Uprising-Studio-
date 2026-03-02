@@ -1,59 +1,171 @@
-# 🤖 MARK XXX
+# 🦇 A.L.F.R.E.D. — PROJECT B.E.L.L
 
-**Watch The Detailed Video To Set-up This Model**: https://www.youtube.com/watch?v=-YjbWjv1tJg
+[![License](https://img.shields.io/badge/license-MIT-gold.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
+[![DeepMind](https://img.shields.io/badge/AI-Antigravity-grey.svg)]()
 
-### Next-Generation Personal AI Assistant — By FatihMakes
+**Autonomous Loyal Functional Robotic Electronic Dispatcher**
 
-A real-time voice AI that can hear, see, understand, and control your Windows computer.
-Local execution. Zero subscriptions(Unless you want to increase request by buying requests from Google AI Studio).
-Built for intelligent automation.
+![Alfred Tactical UI](docs/ui_mockup.png)
+
+> "Master Bell, the Batcomputer is synced. All systems are at your disposal."
+
+Alfred is a next-generation, Batman-inspired digital majordomo. Unlike traditional voice assistants, Alfred is designed for **autonomous mission execution**, featuring local RAG (Retrieval-Augmented Generation) expertise and a self-improving cognitive loop.
+
+---
+
+## 📖 Table of Contents
+
+- [✨ Overview](#-overview)
+- [⚔️ Core Capabilities](#️-core-capabilities)
+- [🏗️ System Architecture](#️-system-architecture)
+- [🚀 Installation](#-installation)
+- [🛠️ Configuration](#️-configuration)
+- [🏁 Usage](#-usage)
+- [🗺️ Roadmap](#️-roadmap)
+- [❓ Troubleshooting](#-troubleshooting)
+- [📜 License](#-license)
+
+---
 
 ## ✨ Overview
 
-**MARK XXX** is an advanced voice-driven AI assistant designed to turn your computer into an interactive intelligent system.
+**Project B.E.L.L.** (Alfred) is a highly capable AI agent built for Windows utility, software development, and digital security. He operates with the dry wit and unwavering loyalty of Alfred Pennyworth, prioritizing Master Bell's efficiency above all else.
 
-Speak naturally — it listens, understands context, responds with a human-like voice, and executes tasks across your system automatically.
+### Why Alfred?
 
-Designed for speed, autonomy, and real-world usability.
+- **Problem Statement**: Most AI assistants are static or "one-shot". Alfred is an **agentic loop** that can plan multi-step complex missions.
+- **Comparison Matrix**:
 
+  | Feature | Alfred (B.E.L.L.) | Jarvis (Legacy) | Home Assistant |
+  | :--- | :--- | :--- | :--- |
+  | **Identity** | Professional Majordomo | Generic Assistant | Automation Bridge |
+  | **Cognition** | RAG + Self-Improvement | Static Prompts | Logic Gates |
+  | **Execution** | Multi-step Planning | Simple Commands | Trigged Events |
+  | **Theming** | Batman Tactical | Sci-Fi | Minimalist |
 
-## 🚀 Capabilities
+---
 
-* **Real-time voice interaction** — Natural conversation with instant response
-* **System control** — Launch apps, manage files, execute commands
-* **Autonomous task execution** — Plans and completes multi-step workflows
-* **Visual awareness** — Screen analysis and webcam understanding
-* **Persistent memory** — Learns preferences and remembers context
-* **Integrated tools** — Web search, weather, reminders, messaging, code help, image generation
+## ⚔️ Core Capabilities
 
-## ⚡ Quick Start
+- **RAG Intelligence Loop**: Dynamically retrieves expertise from an indexed arsenal of 968+ technical skills.
+- **Batcave Tactical UI**: Premium dark/gold dashboard with real-time log telemetry.
+- **Multi-Agent Orchestration**: Integrated with **CoPaw** for complex team-based operations.
+- **Advanced Web Maneuvers**: **SeleniumBase** integration for bypassing bot detection and complex scraping.
+- **Self-Improvement Protocol**: Alfred analyzes his own mission failures and autonomously updates his operational directives.
+
+---
+
+## 🏗️ System Architecture
+
+```mermaid
+graph TD
+    User((Master Bell)) --> |Voice/Web| UI[Web Command Center]
+    UI --> |Mission| Planner[Tactical Planner]
+    Planner --> |Retrieve Skills| RAG[SkillRetriever]
+    RAG --> |968 Skills| Index[(Skills Index)]
+    Planner --> |Execute| Actions[Tactical Actions]
+    Actions --> |Browser| SB[SeleniumBase]
+    Actions --> |System| Disk[Windows Control]
+    Actions --> |LLM| UnifiedLLM[Model Switcher/Ollama]
+    UnifiedLLM --> |Logs| Reflection[Self-Improvement Loop]
+    Reflection --> |Update| Protocols[INSTRUCTIONS_AI.md]
+```
+
+---
+
+## 🚀 Installation
+
+### Prerequisites
+
+- **OS**: Windows 10/11 (Required for system controls)
+- **Python**: 3.10 or higher
+- **RAM**: 8GB Minimum (16GB Recommended for local LLMs)
+- **API Keys**: Google Gemini API key (for primary LLM)
+
+### Detailed Steps
+
+1. **Clone the Repository**:
+
+   ```bash
+   git clone https://github.com/Karl/Alfred
+   cd Alfred
+   ```
+
+2. **Setup Virtual Environment**:
+
+   ```bash
+   python -m venv venv
+   .\venv\Scripts\activate
+   ```
+
+3. **Install Dependencies**:
+
+   ```bash
+   ./deploy.bat
+   ```
+
+   *Note: `deploy.bat` handles PyAudio, Playwright, and Skill indexing automatically.*
+
+4. **API Key Configuration**:
+   Create a `config/api_keys.json` file:
+
+   ```json
+   {
+     "gemini": "YOUR_GEMINI_API_KEY",
+     "ollama_url": "http://localhost:11434"
+   }
+   ```
+
+---
+
+## �️ Configuration
+
+- **Voice Settings**: Modify `core/voice_engine.py` to adjust speech speed and pitch.
+- **LLM Rotation**: Alfred rotates through `gemini-2.5-flash` and `flash-lite` to bypass free-tier limits. See `core/llm_manager.py`.
+- **Identity**: Change user references in `ALFRED_PROTOCOLS.md`.
+
+---
+
+## 🏁 Usage
+
+### Starting the System
 
 ```bash
-git clone https://github.com/FatihMakes
-cd mark-xxx
-python setup.py
 python main.py
 ```
 
-Enter your free Gemini API key on first launch.
-System ready in minutes.
+After launch, the **Web Command Center** will be available at `http://localhost:8000`.
 
-If you got some problems or questions to ask or just want to support;
+### Sample Missions
 
-YouTube Account: [text](https://www.youtube.com/@FatihMakes)
-Instagram Account: [text](https://www.instagram.com/fatihmakes/)
+- *"Alfred, analyze the logs and improve your web interaction protocol."*
+- *"Alfred, research modern agentic patterns and save it to my desktop."*
+- *"Alfred, monitor the Bat-Signal (Check my emails for urgent keywords)."*
 
-## 📋 Requirements
+---
 
-* Windows 10 / 11
-* Python 3.10 or newer
-* Microphone
-* Gemini API key
+## 🗺️ Roadmap
 
-## ⚠️ License
+- [x] RAG Skill Retrieval
+- [x] Self-Improvement Loop
+- [ ] Multi-Agent Coordination (CoPaw Phase 2)
+- [ ] Peripheral Vision (External Camera Support)
+- [ ] Bat-Link (Mobile App Integration)
 
-Personal and non-commercial use only.
-Licensed under **Creative Commons BY-NC 4.0**.
+---
 
-Engineered by a 17-year-old building a real JARVIS-style assistant.
-⭐ Star the repository to support the project.
+## ❓ Troubleshooting
+
+- **PyAudio Error**: If `deploy.bat` fails to install PyAudio, please download the appropriate `.whl` from [Unofficial Windows Binaries](https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyaudio).
+- **LLM Timeout**: Ensure your internet connection is stable or that Ollama is running if in offline mode.
+
+---
+
+## 📜 License
+
+Distributed under the **MIT License**. See `LICENSE` for more information.
+
+---
+*Engineered for The Mission. Respect the cowl.*

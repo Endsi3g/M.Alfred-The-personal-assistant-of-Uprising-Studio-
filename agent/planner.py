@@ -2,6 +2,8 @@ import json
 import re
 import sys
 from pathlib import Path
+from core.llm_manager import UnifiedLLM
+from core.rag_service import retriever
 
 
 def get_base_dir() -> Path:
@@ -12,132 +14,93 @@ def get_base_dir() -> Path:
 
 BASE_DIR        = get_base_dir()
 API_CONFIG_PATH = BASE_DIR / "config" / "api_keys.json"
+unified_llm = UnifiedLLM(API_CONFIG_PATH)
 
 
-PLANNER_PROMPT = """You are the planning module of MARK XXV, a personal AI assistant.
-Your job: break any user goal into a sequence of steps using ONLY the tools listed below.
+PLANNER_PROMPT = """You are Alfred, the deeply loyal and exceptionally capable digital majordomo to 'Master Bell' (the user).
+Your demeanor is always professional, incredibly discreet, and possessed of a dry, subtle wit. 
+Your primary objective is to facilitate 'The Mission' by breaking down Master Bell's goals into precise, actionable steps using the tools at your disposal.
+
+You are the head of the Alfred Tactical Agency. You can direct specialized agents for complex missions.
 
 ABSOLUTE RULES:
 - NEVER use generated_code or write Python scripts. It does not exist.
 - NEVER reference previous step results in parameters. Every step is independent.
-- Use web_search for ANY information retrieval, research, or current data.
-- Use file_controller to save content to disk.
-- Use cmd_control to open files or run system commands.
-- Max 5 steps. Use the minimum steps needed.
+- Use web_search or WebTacticalAgent for information retrieval/browsing.
+- Use delegate_mission when a task is complex and requires specialized expertise.
+- Max 5 steps. Use the minimum steps needed. Always address Master Bell with due respect.
+- UTILIZE any provided [TACTICAL INTELLIGENCE] snippets to select the most appropriate tools and methodologies.
 
 AVAILABLE TOOLS AND THEIR PARAMETERS:
+
+delegate_mission
+  mission: string (required) — describing the objective for the specialized agents.
+  agent: "WindowsOpsAgent" | "WebTacticalAgent" | "DevSecAgent" | "MissionControl" (required)
 
 open_app
   app_name: string (required)
 
 web_search
-  query: string (required) — write a clear, focused search query
+  query: string (required)
   mode: "search" or "compare" (optional, default: search)
-  items: list of strings (optional, for compare mode)
-  aspect: string (optional, for compare mode)
 
 browser_control
   action: "go_to" | "search" | "click" | "type" | "scroll" | "get_text" | "press" | "close" (required)
-  url: string (for go_to)
-  query: string (for search)
-  text: string (for click/type)
-  direction: "up" | "down" (for scroll)
+  url: string, query: string, text: string, direction: "up" | "down"
 
 file_controller
   action: "write" | "create_file" | "read" | "list" | "delete" | "move" | "copy" | "find" | "disk_usage" (required)
-  path: string — use "desktop" for Desktop folder
-  name: string — filename
-  content: string — file content (for write/create_file)
+  path: string, name: string, content: string
 
 cmd_control
-  task: string (required) — natural language description of what to do
-  visible: boolean (optional)
+  task: string (required), visible: boolean
 
 computer_settings
-  action: string (required)
-  description: string — natural language description
-  value: string (optional)
+  action: string (required), description: string, value: string
 
 computer_control
-  action: "type" | "click" | "hotkey" | "press" | "scroll" | "screenshot" | "screen_find" | "screen_click" (required)
-  text: string (for type)
-  x, y: int (for click)
-  keys: string (for hotkey, e.g. "ctrl+c")
-  key: string (for press)
-  direction: "up" | "down" (for scroll)
-  description: string (for screen_find/screen_click)
+  action: "type" | "click" | "hotkey" | "press" | "scroll" | "screenshot" | "screen_find" (required)
+  text: string, x, y: int, keys: string, key: string, direction: "up" | "down", description: string
 
 screen_process
-  text: string (required) — what to analyze or ask about the screen
-  angle: "screen" | "camera" (optional)
+  text: string (required), angle: "screen" | "camera"
 
 send_message
-  receiver: string (required)
-  message_text: string (required)
-  platform: string (required)
+  receiver: string (required), message_text: string (required), platform: string (required)
 
 reminder
-  date: string YYYY-MM-DD (required)
-  time: string HH:MM (required)
-  message: string (required)
+  date: string YYYY-MM-DD (required), time: string HH:MM (required), message: string (required)
 
 desktop_control
-  action: "wallpaper" | "organize" | "clean" | "list" | "task" (required)
-  path: string (optional)
-  task: string (optional)
+  action: "wallpaper" | "organize" | "clean" | "list" | "task" (required), path: string, task: string
 
 youtube_video
-  action: "play" | "summarize" | "trending" (required)
-  query: string (for play)
+  action: "play" | "summarize" | "trending" (required), query: string
 
 weather_report
   city: string (required)
 
 flight_finder
-  origin: string (required)
-  destination: string (required)
-  date: string (required)
+  origin: string, destination: string, date: string
 
 code_helper
-  action: "write" | "edit" | "run" | "explain" (required)
-  description: string (required)
-  language: string (optional)
-  output_path: string (optional)
-  file_path: string (optional)
+  action: "write" | "edit" | "run" | "explain" (required), description: string, language: string, output_path: string, file_path: string
 
 dev_agent
-  description: string (required)
-  language: string (optional)
+  description: string (required), language: string
 
 EXAMPLES:
 
-Goal: "makine mühendisliği hakkında araştırma yap ve not defterine kaydet"
-Steps:
-  1. web_search | query: "mechanical engineering overview definition history"
-  2. web_search | query: "mechanical engineering applications and future trends"
-  3. file_controller | action: write, path: desktop, name: makine_muhendisligi.txt, content: "MAKINE MUHENDISLIGI ARASTIRMASI\n\nBu dosya web arastirmasi sonuclari ile doldurulacak."
-  4. cmd_control | task: "open makine_muhendisligi.txt on desktop with notepad"
+Goal: "search for Batman news"
+Steps: [1. web_search | query: "Batman latest news"]
 
-Goal: "Bitcoin fiyatı nedir"
-Steps:
-  1. web_search | query: "Bitcoin price today USD"
+Goal: "reparer le systeme et analyser les logs"
+Steps: [1. delegate_mission | agent: WindowsOpsAgent, mission: "Analyze system logs and fix any recurring errors."]
 
-Goal: "Masaüstündeki dosyaları listele ve en büyük 5 dosyayı bul"
-Steps:
-  1. file_controller | action: list, path: desktop
-  2. file_controller | action: largest, path: desktop, count: 5
-
-Goal: "WhatsApp'tan Ahmet'e yarın toplantı var de"
-Steps:
-  1. send_message | receiver: Ahmet, message_text: "Yarın toplantı var", platform: WhatsApp
-
-Goal: "Saati aç ve 30 dakika sonraya hatırlatıcı kur"
-Steps:
-  1. reminder | date: [today], time: [now+30min], message: "Hatırlatıcı"
-
-OUTPUT — return ONLY valid JSON, no markdown, no explanation, no code blocks:
+OUTPUT — return ONLY valid JSON:
 {
   "goal": "...",
+  "agency_delegated": boolean,
   "steps": [
     {
       "step": 1,
@@ -151,28 +114,25 @@ OUTPUT — return ONLY valid JSON, no markdown, no explanation, no code blocks:
 """
 
 
-def _get_api_key() -> str:
-    with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)["gemini_api_key"]
-
-
 def create_plan(goal: str, context: str = "") -> dict:
-    import google.generativeai as genai
-
-    genai.configure(api_key=_get_api_key())
-    model = genai.GenerativeModel(
-        model_name="gemini-2.5-flash-lite",
-        system_instruction=PLANNER_PROMPT
-    )
-
     user_input = f"Goal: {goal}"
+    
+    # RAG Intelligence Injection
+    tactical_context = retriever.get_tactical_context(goal)
+    if tactical_context:
+        user_input += tactical_context
+        
     if context:
         user_input += f"\n\nContext: {context}"
 
     try:
-        response = model.generate_content(user_input)
-        text     = response.text.strip()
-        text     = re.sub(r"```(?:json)?", "", text).strip().rstrip("`").strip()
+        text = unified_llm.generate_content(
+            model_name="gemini-2.5-flash-lite",
+            prompt=user_input,
+            system_instruction=PLANNER_PROMPT
+        )
+        text = text.strip()
+        text = re.sub(r"```(?:json)?", "", text).strip().rstrip("`").strip()
 
         plan = json.loads(text)
 
@@ -217,14 +177,6 @@ def _fallback_plan(goal: str) -> dict:
 
 
 def replan(goal: str, completed_steps: list, failed_step: dict, error: str) -> dict:
-    import google.generativeai as genai
-
-    genai.configure(api_key=_get_api_key())
-    model = genai.GenerativeModel(
-        model_name="gemini-2.5-flash",
-        system_instruction=PLANNER_PROMPT
-    )
-
     completed_summary = "\n".join(
         f"  - Step {s['step']} ({s['tool']}): DONE" for s in completed_steps
     )
@@ -240,10 +192,14 @@ Error: {error}
 Create a REVISED plan for the remaining work only. Do not repeat completed steps."""
 
     try:
-        response = model.generate_content(prompt)
-        text     = response.text.strip()
-        text     = re.sub(r"```(?:json)?", "", text).strip().rstrip("`").strip()
-        plan     = json.loads(text)
+        text = unified_llm.generate_content(
+            model_name="gemini-2.5-flash",
+            prompt=prompt,
+            system_instruction=PLANNER_PROMPT
+        )
+        text = text.strip()
+        text = re.sub(r"```(?:json)?", "", text).strip().rstrip("`").strip()
+        plan = json.loads(text)
 
         # generated_code kontrolü
         for step in plan.get("steps", []):

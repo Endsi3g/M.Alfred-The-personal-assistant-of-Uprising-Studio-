@@ -13,6 +13,7 @@ import subprocess
 import sys
 import platform
 from pathlib import Path
+from core.system_ops import ops as sys_ops
 
 try:
     import pyautogui
@@ -71,44 +72,19 @@ def volume_mute():
 def volume_set(value: int):
     value = max(0, min(100, value))
     if _OS == "Windows":
-        try:
-            from ctypes import cast, POINTER
-            from comtypes import CLSCTX_ALL
-            from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
-            import math
-            devices   = AudioUtilities.GetSpeakers()
-            interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-            vol       = cast(interface, POINTER(IAudioEndpointVolume))
-            vol_db    = -65.25 if value == 0 else max(-65.25, 20 * math.log10(value / 100))
-            vol.SetMasterVolumeLevel(vol_db, None)
-            print(f"[Settings] 🔊 Volume → {value}%")
-            return
-        except Exception as e:
-            print(f"[Settings] ⚠️ pycaw failed: {e}")
+        return sys_ops.set_volume(value)
     elif _OS == "Darwin":
         subprocess.run(["osascript", "-e", f"set volume output volume {value}"])
         return
     else:
-        subprocess.run(["pactl", "set-sink-volume", "@DEFAULT_SINK@", f"{value}%"])
+        subprocess.run(["pactl", "-set-sink-volume", "@DEFAULT_SINK@", f"{value}%"])
         return
 
-def brightness_up():
+def brightness_set(level: int):
+    level = max(0, min(100, level))
     if _OS == "Windows":
-        pyautogui.hotkey("win", "a")
-        time.sleep(0.3)
-    elif _OS == "Darwin":
-        subprocess.run(["osascript", "-e", "tell application \"System Events\" to key code 144"])
-    else:
-        subprocess.run(["brightnessctl", "set", "+10%"])
-
-def brightness_down():
-    if _OS == "Windows":
-        pyautogui.hotkey("win", "a")
-        time.sleep(0.3)
-    elif _OS == "Darwin":
-        subprocess.run(["osascript", "-e", "tell application \"System Events\" to key code 145"])
-    else:
-        subprocess.run(["brightnessctl", "set", "10%-"])
+        return sys_ops.set_brightness(level)
+    # ... other OS as before
 
 
 def close_app():
@@ -630,12 +606,25 @@ def computer_settings(
     print(f"[Settings] ⚙️ Action: {action}  Value: {value}")
 
 
-    if action == "volume_set":
+    if action == "volume_set" or action == "set_volume":
         try:
-            volume_set(int(value or 50))
-            return f"Volume set to {value}%."
+            res = volume_set(int(value or 50))
+            return res or f"Volume set to {value}%."
         except Exception as e:
             return f"Could not set volume: {e}"
+
+    if action in ("brightness_set", "set_brightness"):
+        try:
+            res = brightness_set(int(value or 50))
+            return res or f"Brightness set to {value}%."
+        except Exception as e:
+            return f"Could not set brightness: {e}"
+
+    if action in ("list_services", "show_services"):
+        return sys_ops.list_services(str(value or ""))
+    
+    if action == "restart_service":
+        return sys_ops.restart_service(str(value or ""))
 
     if action in ("type_text", "write_on_screen", "type", "write"):
         text = str(value or params.get("text", ""))
