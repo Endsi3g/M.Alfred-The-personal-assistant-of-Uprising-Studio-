@@ -102,19 +102,20 @@ def _update_memory_async(user_text: str, jarvis_text: str) -> None:
     _last_memory_input = text
 
     try:
-        import google.generativeai as genai
-        genai.configure(api_key=_get_api_key())
-        model = genai.GenerativeModel("gemini-2.5-flash-lite")
+        from core.llm_manager import UnifiedLLM
+        engine = UnifiedLLM(API_CONFIG_PATH)
 
-        check = model.generate_content(
+        check_prompt = (
             f"Does this message contain personal facts about the user "
             f"(name, age, city, job, hobby, relationship, birthday, preference)? "
             f"Reply only YES or NO.\n\nMessage: {text[:300]}"
         )
-        if "YES" not in check.text.upper():
+        check_text = engine.generate_content("gemini-1.5-flash", check_prompt)
+        
+        if "YES" not in check_text.upper():
             return
 
-        raw = model.generate_content(
+        extract_prompt = (
             f"Extract personal facts from this message. Any language.\n"
             f"Return ONLY valid JSON or {{}} if nothing found.\n"
             f"Extract: name, age, birthday, city, job, hobbies, preferences, relationships, language.\n"
@@ -124,7 +125,9 @@ def _update_memory_async(user_text: str, jarvis_text: str) -> None:
             f'"preferences":{{"hobby":{{"value":"..."}}}}, '
             f'"notes":{{"job":{{"value":"..."}}}}}}\n\n'
             f"Message: {text[:500]}\n\nJSON:"
-        ).text.strip()
+        )
+        raw = engine.generate_content("gemini-1.5-flash", extract_prompt)
+        raw = raw.strip()
 
         raw = re.sub(r"```(?:json)?", "", raw).strip().rstrip("`").strip()
         if not raw or raw == "{}":

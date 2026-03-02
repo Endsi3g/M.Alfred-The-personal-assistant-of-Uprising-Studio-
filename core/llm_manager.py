@@ -2,16 +2,17 @@ import json
 import os
 import traceback
 from pathlib import Path
-import google.generativeai as genai
+from google import genai
 import ollama
 
 class UnifiedLLM:
     def __init__(self, api_config_path: Path):
         self.api_config_path = api_config_path
         self._load_config()
+        self.client = None
         self._setup_gemini()
-        # Model rotation sequence to maximize free-tier limits (20 req/day per model)
-        self.model_rotation = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-1.5-flash"]
+        # Model rotation sequence to maximize free-tier limits
+        self.model_rotation = ["gemini-2.5-flash", "gemini-2.0-flash-lite-preview-02-05", "gemini-1.5-flash"]
 
     def _load_config(self):
         try:
@@ -27,21 +28,26 @@ class UnifiedLLM:
 
     def _setup_gemini(self):
         if self.gemini_api_key:
-            genai.configure(api_key=self.gemini_api_key)
+            try:
+                self.client = genai.Client(api_key=self.gemini_api_key)
+            except Exception as e:
+                print(f"[UnifiedLLM] Gemini Client Init Error: {e}")
 
     def generate_content(self, model_name: str, prompt: str, system_instruction: str = None) -> str:
         # Try Gemini First with Rotation
-        if self.gemini_api_key:
-            # If the requested model fails, try others in the rotation
+        if self.client:
             test_models = [model_name] + [m for m in self.model_rotation if m != model_name]
             
             for m_name in test_models:
                 try:
-                    model = genai.GenerativeModel(model_name=m_name, system_instruction=system_instruction)
-                    response = model.generate_content(prompt)
+                    response = self.client.models.generate_content(
+                        model=m_name,
+                        contents=prompt,
+                        config={'system_instruction': system_instruction} if system_instruction else None
+                    )
                     return response.text
                 except Exception as e:
-                    print(f"[UnifiedLLM] Model {m_name} failed or limit reached: {e}")
+                    print(f"[UnifiedLLM] Model {m_name} failed: {e}")
                     continue
             
             print("[UnifiedLLM] All Gemini models exhausted. Falling back to Ollama...")
