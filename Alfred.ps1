@@ -17,7 +17,6 @@ Start-Process -NoNewWindow -FilePath "python" -ArgumentList "src/main.py"
 # Wait a moment for FastAPI/Websockets to be ready
 Start-Sleep -Seconds 3
 
-# Launch Cluely Overlay Frontend
-Write-Host "[Alfred] Launching Cluely Overlay Engine..." -ForegroundColor Cyan
-Set-Location "$ProjectRoot\cluely-overlay"
-npm start
+# Launch Alfred Core (HUD included natively)
+Write-Host "[Alfred] Launching Alfred Native HUD & Core..." -ForegroundColor Cyan
+python src/main.py

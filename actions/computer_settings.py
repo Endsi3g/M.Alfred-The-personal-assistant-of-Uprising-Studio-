@@ -84,7 +84,26 @@ def brightness_set(level: int):
     level = max(0, min(100, level))
     if _OS == "Windows":
         return sys_ops.set_brightness(level)
-    # ... other OS as before
+    elif _OS == "Darwin":
+        subprocess.run(["osascript", "-e", f"tell application \"System Events\" to set brightness to {level/100}"])
+    else:
+        subprocess.run(["xbacklight", "-set", str(level)])
+
+def brightness_up():
+    # Get current and add 10
+    if _OS == "Windows":
+        curr = sys_ops.get_brightness() or 50
+        brightness_set(curr + 10)
+    else:
+        # Simple blind adjustment for other OS or implement get_brightness there
+        pyautogui.press("brightnessup")
+
+def brightness_down():
+    if _OS == "Windows":
+        curr = sys_ops.get_brightness() or 50
+        brightness_set(curr - 10)
+    else:
+        pyautogui.press("brightnessdown")
 
 
 def close_app():

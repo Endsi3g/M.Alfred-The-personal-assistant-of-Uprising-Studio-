@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CommandBar } from './components/CommandBar';
 import { ResponseCard } from './components/ResponseCard';
+import { Dashboard } from './components/Dashboard';
 
 declare global {
   interface Window {
@@ -16,6 +17,7 @@ declare global {
 function App() {
   const [tokens, setTokens] = useState<string[]>([]);
   const [isThinking, setIsThinking] = useState(false);
+  const [isDashboardOpen, setIsDashboardOpen] = useState(false); // Added isDashboardOpen state
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
@@ -55,7 +57,7 @@ function App() {
     // Listen for global shortcut trigger from Electron
     if (window.electronAPI) {
       window.electronAPI.onAssistTriggered(() => {
-        handleAssist();
+        handleAssist(false); // Global shortcut defaults to non-pilot for now
       });
     }
 
@@ -64,24 +66,32 @@ function App() {
     };
   }, []);
 
-  const handleAssist = () => {
+  const handleAssist = (isPilotMode: boolean) => { // Modified handleAssist signature
     // Trigger Assist mode: Clear tokens, set thinking UI, and send to backend
     setTokens([]);
     setIsThinking(true);
+    if (isDashboardOpen) setIsDashboardOpen(false); // Close dashboard if open
 
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      // Send a dummy context request for now to trigger Alfred
       wsRef.current.send(JSON.stringify({
         action: 'assist',
-        context: 'User requested assistance from overlay.'
+        context: 'User requested assistance from overlay.',
+        pilot_mode: isPilotMode // Added pilot_mode
       }));
     }
   };
 
   return (
     <div style={{ width: '100vw', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <CommandBar onAssist={handleAssist} />
-      <ResponseCard tokens={tokens} isThinking={isThinking} />
+      <CommandBar
+        onAssist={handleAssist}
+        onToggleDashboard={() => setIsDashboardOpen(!isDashboardOpen)} // Added onToggleDashboard
+      />
+      {isDashboardOpen ? ( // Conditional rendering for Dashboard
+        <Dashboard onClose={() => setIsDashboardOpen(false)} />
+      ) : (
+        <ResponseCard tokens={tokens} isThinking={isThinking} />
+      )}
     </div>
   );
 }

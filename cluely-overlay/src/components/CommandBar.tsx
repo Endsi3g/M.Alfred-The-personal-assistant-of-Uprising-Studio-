@@ -7,16 +7,20 @@ import {
     EyeOff,
     Home,
     X,
-    Sparkles
+    Sparkles,
+    Zap,
+    ZapOff
 } from 'lucide-react';
 
 interface CommandBarProps {
-    onAssist: () => void;
+    onAssist: (isPilotMode: boolean) => void;
+    onToggleDashboard: () => void;
 }
 
-export const CommandBar: React.FC<CommandBarProps> = ({ onAssist }) => {
+export const CommandBar: React.FC<CommandBarProps> = ({ onAssist, onToggleDashboard }) => {
     const [isMuted, setIsMuted] = useState(false);
     const [isStealth, setIsStealth] = useState(true);
+    const [isPilotMode, setIsPilotMode] = useState(false);
     const [time, setTime] = useState(0);
 
     useEffect(() => {
@@ -54,7 +58,7 @@ export const CommandBar: React.FC<CommandBarProps> = ({ onAssist }) => {
                 padding: '0 12px',
                 height: '48px',
                 width: '100%',
-                maxWidth: '500px',
+                maxWidth: '550px',
                 justifyContent: 'space-between',
                 userSelect: 'none'
             }}
@@ -72,13 +76,18 @@ export const CommandBar: React.FC<CommandBarProps> = ({ onAssist }) => {
                 <Grip size={18} />
             </div>
 
-            <div className="no-drag" style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                <button
-                    onClick={() => setIsMuted(!isMuted)}
-                    style={btnStyle}
-                    title="Toggle Microphone"
-                >
+            <div className="no-drag" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <button onClick={() => setIsMuted(!isMuted)} className="icon-btn" title="Toggle Microphone">
                     {isMuted ? <MicOff size={16} color="#ff4444" /> : <Mic size={16} color="#00d4ff" />}
+                </button>
+
+                <button
+                    onClick={() => setIsPilotMode(!isPilotMode)}
+                    className="icon-btn"
+                    title={isPilotMode ? "Pilot Mode ON (Autonomous System Control)" : "Pilot Mode OFF (Observational RAG only)"}
+                    style={{ background: isPilotMode ? 'rgba(255, 51, 102, 0.15)' : 'transparent', color: isPilotMode ? '#ff3366' : 'var(--text-secondary)' }}
+                >
+                    {isPilotMode ? <Zap size={16} /> : <ZapOff size={16} />}
                 </button>
 
                 <div style={{
@@ -95,39 +104,35 @@ export const CommandBar: React.FC<CommandBarProps> = ({ onAssist }) => {
 
             <div className="no-drag" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <button
-                    onClick={onAssist}
-                    style={{ ...btnStyle, background: 'rgba(0, 212, 255, 0.1)', color: '#00d4ff', padding: '4px 12px', borderRadius: '16px', display: 'flex', gap: '6px' }}
-                    title="Manual Assist (CMD+Enter)"
+                    onClick={() => onAssist(isPilotMode)}
+                    style={{
+                        background: isPilotMode ? 'rgba(255, 51, 102, 0.1)' : 'rgba(0, 212, 255, 0.1)',
+                        color: isPilotMode ? '#ff3366' : '#00d4ff',
+                        padding: '4px 12px',
+                        borderRadius: '16px',
+                        display: 'flex',
+                        gap: '6px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        alignItems: 'center'
+                    }}
+                    title={isPilotMode ? "Execute Task (CMD+Enter)" : "Analyze Screen (CMD+Enter)"}
                 >
-                    <Sparkles size={14} /> Smart
+                    {isPilotMode ? <Zap size={14} /> : <Sparkles size={14} />} {isPilotMode ? 'Pilot' : 'Smart'}
                 </button>
 
-                <button onClick={toggleStealth} style={btnStyle} title="Toggle Invisibility">
+                <button onClick={toggleStealth} className="icon-btn" title="Toggle Invisibility">
                     {isStealth ? <EyeOff size={16} color="var(--text-secondary)" /> : <Eye size={16} color="#00ff88" />}
                 </button>
 
-                <button style={btnStyle} title="Dashboard">
+                <button onClick={onToggleDashboard} className="icon-btn" title="Dashboard">
                     <Home size={16} color="var(--text-secondary)" />
                 </button>
 
-                <button onClick={closeOverlay} style={{ ...btnStyle, marginLeft: '8px' }} title="Close Session">
+                <button onClick={closeOverlay} className="icon-btn" style={{ marginLeft: '4px' }} title="Close Session">
                     <X size={18} color="rgba(255,255,255,0.8)" />
                 </button>
             </div>
         </div>
     );
-};
-
-// Vanilla React inline styles for simple buttons
-const btnStyle: React.CSSProperties = {
-    background: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: 'var(--text-secondary)',
-    transition: '0.2s',
-    padding: '6px',
-    borderRadius: '8px',
 };

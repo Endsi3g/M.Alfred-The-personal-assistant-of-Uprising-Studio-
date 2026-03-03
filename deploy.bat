@@ -15,13 +15,13 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-echo [2/4] Installing Core Dependencies...
+echo [2/6] Installing Core Dependencies...
 python -m pip install -r requirements.txt
 if %errorlevel% neq 0 (
     echo [WARN] Some dependencies failed to install.
 )
 
-echo [3/4] Running Alfred's Smart Setup...
+echo [3/6] Running Alfred's Smart Setup...
 python scripts/setup.py
 if %errorlevel% neq 0 (
     echo [ERROR] Setup protocol failed.

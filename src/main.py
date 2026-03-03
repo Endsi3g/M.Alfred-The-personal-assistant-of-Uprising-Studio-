@@ -20,6 +20,7 @@ from ui import JarvisUI
 from web_ui import start_web_ui, patch_ui_for_web
 from memory.memory_manager import load_memory, update_memory, format_memory_for_prompt
 from core.watchdog import AlfredWatchdog
+from overlay.alfred_overlay import AlfredOverlay
 
 from agent.task_queue import get_queue
 
@@ -876,6 +877,12 @@ def main():
         threading.Thread(target=watchdog.start, daemon=True).start()
     except Exception as e:
         print(f"[Watchdog] ⚠️ Failed: {e}")
+
+    # Start Cluely PyQt6 Overlay (Native HUD)
+    try:
+        threading.Thread(target=AlfredOverlay.start, daemon=True).start()
+    except Exception as e:
+        print(f"[Overlay] ⚠️ Failed: {e}")
 
     ui.root.mainloop()
 

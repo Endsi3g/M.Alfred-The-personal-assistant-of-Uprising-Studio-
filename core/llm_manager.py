@@ -33,6 +33,15 @@ class UnifiedLLM:
             except Exception as e:
                 print(f"[UnifiedLLM] Gemini Client Init Error: {e}")
 
+    def check_ollama(self) -> bool:
+        """Checks if local Ollama server is reachable"""
+        try:
+            import requests
+            response = requests.get(f"{self.ollama_url}/api/tags", timeout=2)
+            return response.status_code == 200
+        except:
+            return False
+
     def generate_content(self, model_name: str, prompt: str, system_instruction: str = None) -> str:
         # Try Gemini First with Rotation
         if self.client:
@@ -53,6 +62,9 @@ class UnifiedLLM:
             print("[UnifiedLLM] All Gemini models exhausted. Falling back to Ollama...")
         
         # Fallback to Ollama
+        if not self.check_ollama():
+            return "Error: Local Ollama server is not running and Gemini failed."
+
         try:
             client = ollama.Client(host=self.ollama_url)
             messages = []
@@ -87,7 +99,37 @@ class UnifiedLLM:
             print(f"[UnifiedLLM] Vision Analysis Error: {e}")
             return f"Error analyzing vision: {e}"
 
-    def list_models(self):
+    def stream_vision(self, prompt: str, image_bytes: bytes):
+        """
+        Streams vision analysis from Gemini.
+        Yields chunks of text.
+        """
+        if not self.client:
+            yield "Error: Gemini client not initialized."
+            return
 
-        # Specific models for Gemini/Ollama could be handled here if needed
-        pass
+        try:
+            response = self.client.models.generate_content(
+                model="gemini-1.5-flash",
+                contents=[
+                    prompt,
+                    {'mime_type': 'image/png', 'data': image_bytes}
+                ],
+                config={'system_instruction': "You are Alfred, a helpful assistant. Use <think> tags for your reasoning."}
+            )
+            # Python SDK generate_content with stream=True is a bit different, 
+            # for now we simulate stream by returning the full text if not using stream=True
+            # but we can implement it properly:
+            
+            stream = self.client.models.generate_content_stream(
+                model="gemini-1.5-flash",
+                contents=[
+                    prompt,
+                    {'mime_type': 'image/png', 'data': image_bytes}
+                ]
+            )
+            for chunk in stream:
+                yield chunk.text
+
+        except Exception as e:
+            yield f"Error in stream: {e}"

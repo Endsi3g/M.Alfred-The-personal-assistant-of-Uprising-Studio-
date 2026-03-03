@@ -34,6 +34,15 @@ class SystemOps:
         return f"Brightness set to {level}%"
 
     @staticmethod
+    def get_brightness():
+        cmd = "Get-CimInstance -Namespace root/WMI -ClassName WmiMonitorBrightness | Select-Object -ExpandProperty CurrentBrightness"
+        result = subprocess.run(["powershell", "-Command", cmd], capture_output=True, text=True)
+        try:
+            return int(result.stdout.strip())
+        except:
+            return None
+
+    @staticmethod
     def list_services(filter_str: str = ""):
         cmd = "Get-Service"
         if filter_str:
