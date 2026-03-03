@@ -2,7 +2,16 @@
 
 All notable changes to the Alfred system will be documented in this mission log.
 
-## [3.1.0] - 2026-03-02
+## [1.1.2] - 2026-03-03
+
+### MCP Integration (Milestone 8)
+
+- **Dynamic Tool Discovery**: Implemented `core/mcp_manager.py` for Model Context Protocol (MCP) support.
+- **@21st-dev/magic**: Integrated the magic MCP server for advanced autonomous capabilities.
+- **Auto-Provisioning**: Configuration uses `npx` for zero-install, cross-system compatibility.
+- **Gemini Bridge**: External MCP tools are now dynamically registered as native Gemini functions at runtime.
+
+## [1.1.0] - 2026-03-03
 
 ### Multi-Agent Orchestration (Milestone 2)
 

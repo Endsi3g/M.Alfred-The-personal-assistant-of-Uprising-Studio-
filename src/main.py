@@ -40,6 +40,7 @@ from web_ui import start_web_ui, patch_ui_for_web
 from memory.memory_manager import load_memory, update_memory, format_memory_for_prompt
 from core.watchdog import AlfredWatchdog
 from overlay.alfred_overlay import AlfredOverlay
+from core.mcp_manager import MCPManager
 
 from agent.task_queue import get_queue
 
@@ -506,6 +507,24 @@ TOOL_DECLARATIONS = [
 }
 ]
 
+# --- MCP Tool Registry ---
+mcp_registry: Optional['MCPManager'] = None
+
+async def _init_mcp():
+    global mcp_registry
+    path = API_CONFIG_PATH.parent / "mcp_config.json"
+    mcp_registry = MCPManager(str(path))
+    await mcp_registry.load_servers()
+    
+    # Append MCP tools to global declarations
+    for tool in mcp_registry.all_tools:
+        TOOL_DECLARATIONS.append({
+            "name": tool["name"],
+            "description": tool["description"],
+            "parameters": tool["parameters"]
+        })
+# -------------------------
+
 class JarvisLive:
 
     def __init__(self, ui: JarvisUI):
@@ -707,6 +726,17 @@ class JarvisLive:
                 )
                 result = r or "Done."
 
+            # --- MCP Execution Bridge ---
+            elif mcp_registry and any(t["name"] == name for t in mcp_registry.all_tools):
+                mcp_res = await mcp_registry.execute(name, args)
+                # MCP responses are usually a list of content parts
+                if isinstance(mcp_res, list):
+                    texts = [p.get("text", "") for p in mcp_res if p.get("type") == "text"]
+                    result = "\n".join(texts) or "Action completed via MCP."
+                else:
+                    result = str(mcp_res)
+            # ---------------------------
+
             else:
                 result = f"Unknown tool: {name}"
             
@@ -853,6 +883,9 @@ class JarvisLive:
                     self._loop          = asyncio.get_event_loop() 
                     self.audio_in_queue = asyncio.Queue()
                     self.out_queue      = asyncio.Queue(maxsize=10)
+
+                    # Initialize MCP Servers
+                    await _init_mcp()
 
                     print("[JARVIS] ✅ Connected.")
                     self.ui.write_log("JARVIS online.")
