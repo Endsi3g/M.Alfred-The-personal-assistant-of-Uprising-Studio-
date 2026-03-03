@@ -10,13 +10,26 @@ $env:PYTHONPATH = "$ProjectRoot;$env:PYTHONPATH"
 Write-Host "[Alfred] Checking dependencies..." -ForegroundColor Yellow
 python -m pip install -r requirements.txt --quiet
 
-# Launch Python Core API/Backend (in background)
-Write-Host "[Alfred] Launching Tactical OS Core..." -ForegroundColor Green
-Start-Process -NoNewWindow -FilePath "python" -ArgumentList "src/main.py"
+# Ollama Automation Layer
+Write-Host "[Alfred] Checking Ollama status..." -ForegroundColor Yellow
+$OllamaCmd = Get-Command ollama -ErrorAction SilentlyContinue
+if (-not $OllamaCmd) {
+    Write-Host "[Alfred] Ollama not detected. Attempting installation via winget..." -ForegroundColor Cyan
+    winget install -e --id Ollama.Ollama --accept-source-agreements --accept-package-agreements
+}
 
-# Wait a moment for FastAPI/Websockets to be ready
-Start-Sleep -Seconds 3
+# Start Ollama service if not reachable
+$PortCheck = (Test-NetConnection localhost -Port 11434 -InformationLevel Quiet)
+if (-not $PortCheck) {
+    Write-Host "[Alfred] Starting Ollama Background Service..." -ForegroundColor Green
+    Start-Process "ollama" -ArgumentList "serve" -WindowStyle Hidden
+    Start-Sleep -Seconds 5
+}
 
-# Launch Alfred Core (HUD included natively)
-Write-Host "[Alfred] Launching Alfred Native HUD & Core..." -ForegroundColor Cyan
+# Ensure Local LLM Fallback (llama3)
+Write-Host "[Alfred] Syncing Local LLM (llama3)..." -ForegroundColor Yellow
+ollama pull llama3
+
+# Launch Alfred HUD & Core
+Write-Host "[Alfred] Initializing Alfred Native HUD & Core..." -ForegroundColor Cyan
 python src/main.py
