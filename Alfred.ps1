@@ -6,14 +6,6 @@ Write-Host "--- Initializing Alfred Master Orchestration Protocol ---" -Foregrou
 $ProjectRoot = Get-Location
 $env:PYTHONPATH = "$ProjectRoot;$env:PYTHONPATH"
 
-# Dependency & DLL Health Check
-Write-Host "[Alfred] Verifying PyQt6 Runtime..." -ForegroundColor Yellow
-$PyCheck = python -c "import PyQt6.QtCore; print('OK')" 2>$null
-if ($PyCheck -ne "OK") {
-    Write-Host "[Alfred] PyQt6 DLL Init Failed. Attempting forced reinstall..." -ForegroundColor Red
-    python -m pip uninstall -y PyQt6 PyQt6-Qt6 PyQt6-sip --quiet
-    python -m pip install PyQt6 --quiet
-}
 
 # Ollama Automation Layer
 Write-Host "[Alfred] Checking Ollama status..." -ForegroundColor Yellow

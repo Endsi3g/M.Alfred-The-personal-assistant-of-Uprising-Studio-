@@ -1,10 +1,29 @@
+import os
+import sys
 import asyncio
 import threading
 import json
 import re
-import sys
 import traceback
 from pathlib import Path
+
+# --- PyQt6 DLL Fix for Python 3.14 (Alpha) ---
+def _fix_pyqt_dlls():
+    if sys.platform == "win32":
+        # Check both global and roaming site-packages
+        possible_pyqt_paths = [
+            os.path.join(sys.prefix, "Lib", "site-packages", "PyQt6"),
+            os.path.expandvars(r"%APPDATA%\Python\Python314\site-packages\PyQt6")
+        ]
+        for loc in possible_pyqt_paths:
+            bin_path = os.path.join(loc, "Qt6", "bin")
+            if os.path.exists(bin_path):
+                try: 
+                    os.add_dll_directory(bin_path)
+                except: pass
+
+_fix_pyqt_dlls()
+# ---------------------------------------------
 
 # Fix sys.path for moved file
 project_root = Path(__file__).resolve().parent.parent
