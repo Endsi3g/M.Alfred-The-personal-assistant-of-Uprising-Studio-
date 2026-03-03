@@ -12,23 +12,38 @@ python -m pip install -r requirements.txt --quiet
 
 # Ollama Automation Layer
 Write-Host "[Alfred] Checking Ollama status..." -ForegroundColor Yellow
-$OllamaCmd = Get-Command ollama -ErrorAction SilentlyContinue
-if (-not $OllamaCmd) {
-    Write-Host "[Alfred] Ollama not detected. Attempting installation via winget..." -ForegroundColor Cyan
-    winget install -e --id Ollama.Ollama --accept-source-agreements --accept-package-agreements
+$OllamaPath = Get-Command ollama -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
+if (-not $OllamaPath) {
+    $LocalOllama = "$env:LOCALAPPDATA\Ollama\ollama.exe"
+    if (Test-Path $LocalOllama) {
+        $OllamaPath = $LocalOllama
+    } else {
+        Write-Host "[Alfred] Ollama not detected. Attempting installation via winget..." -ForegroundColor Cyan
+        winget install -e --id Ollama.Ollama --accept-source-agreements --accept-package-agreements
+        # After install, check typical path again
+        if (Test-Path $LocalOllama) { $OllamaPath = $LocalOllama }
+    }
 }
 
 # Start Ollama service if not reachable
 $PortCheck = (Test-NetConnection localhost -Port 11434 -InformationLevel Quiet)
 if (-not $PortCheck) {
     Write-Host "[Alfred] Starting Ollama Background Service..." -ForegroundColor Green
-    Start-Process "ollama" -ArgumentList "serve" -WindowStyle Hidden
+    if ($OllamaPath) {
+        Start-Process $OllamaPath -ArgumentList "serve" -WindowStyle Hidden
+    } else {
+        Start-Process "ollama" -ArgumentList "serve" -WindowStyle Hidden
+    }
     Start-Sleep -Seconds 5
 }
 
 # Ensure Local LLM Fallback (llama3)
 Write-Host "[Alfred] Syncing Local LLM (llama3)..." -ForegroundColor Yellow
-ollama pull llama3
+if ($OllamaPath) {
+    & $OllamaPath pull llama3
+} else {
+    ollama pull llama3
+}
 
 # Launch Alfred HUD & Core
 Write-Host "[Alfred] Initializing Alfred Native HUD & Core..." -ForegroundColor Cyan
