@@ -6,22 +6,42 @@ Write-Host "--- Initializing Alfred Master Orchestration Protocol ---" -Foregrou
 $ProjectRoot = Get-Location
 $env:PYTHONPATH = "$ProjectRoot;$env:PYTHONPATH"
 
-# Dependency Check
-Write-Host "[Alfred] Checking dependencies..." -ForegroundColor Yellow
-python -m pip install -r requirements.txt --quiet
+# Dependency & DLL Health Check
+Write-Host "[Alfred] Verifying PyQt6 Runtime..." -ForegroundColor Yellow
+$PyCheck = python -c "import PyQt6.QtCore; print('OK')" 2>$null
+if ($PyCheck -ne "OK") {
+    Write-Host "[Alfred] PyQt6 DLL Init Failed. Attempting forced reinstall..." -ForegroundColor Red
+    python -m pip uninstall -y PyQt6 PyQt6-Qt6 PyQt6-sip --quiet
+    python -m pip install PyQt6 --quiet
+}
 
 # Ollama Automation Layer
 Write-Host "[Alfred] Checking Ollama status..." -ForegroundColor Yellow
 $OllamaPath = Get-Command ollama -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
 if (-not $OllamaPath) {
-    $LocalOllama = "$env:LOCALAPPDATA\Ollama\ollama.exe"
-    if (Test-Path $LocalOllama) {
-        $OllamaPath = $LocalOllama
-    } else {
+    # Check common locations
+    $PathsToTest = @(
+        "$env:LOCALAPPDATA\Programs\Ollama\ollama.exe",
+        "$env:LOCALAPPDATA\Ollama\ollama.exe",
+        "C:\Program Files\Ollama\ollama.exe"
+    )
+    foreach ($p in $PathsToTest) {
+        if (Test-Path $p) {
+            $OllamaPath = $p
+            break
+        }
+    }
+    
+    if (-not $OllamaPath) {
         Write-Host "[Alfred] Ollama not detected. Attempting installation via winget..." -ForegroundColor Cyan
         winget install -e --id Ollama.Ollama --accept-source-agreements --accept-package-agreements
-        # After install, check typical path again
-        if (Test-Path $LocalOllama) { $OllamaPath = $LocalOllama }
+        # Refresh paths after install
+        foreach ($p in $PathsToTest) {
+            if (Test-Path $p) {
+                $OllamaPath = $p
+                break
+            }
+        }
     }
 }
 
