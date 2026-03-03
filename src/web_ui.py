@@ -9,6 +9,8 @@ import psutil
 import platform
 import subprocess
 import os
+import mss
+import mss.tools
 from pathlib import Path
 
 app = FastAPI()
@@ -18,6 +20,10 @@ logs = []
 status = "ONLINE"
 jarvis_instance = None
 ROOT_DIR = Path(__file__).resolve().parent.parent
+
+# Start Live Insights Worker for Cluely passive audio memory
+from core.transcription_worker import start_live_insights_worker, get_live_transcript
+start_live_insights_worker()
 
 def get_system_stats():
     return {
@@ -365,25 +371,73 @@ async def cluely_websocket(websocket: WebSocket):
                 
                 if action == "assist" and jarvis_instance:
                     text_context = payload.get("context", "")
+                    await websocket.send_text(json.dumps({"type": "status", "status": "Taking screenshot..."}))
                     
-                    def cluely_speak(text: str):
+                    # 1. Grab screenshot async
+                    def grab_screen() -> bytes:
+                        with mss.mss() as sct:
+                            monitor = sct.monitors[1]
+                            shot = sct.grab(monitor)
+                            return mss.tools.to_png(shot.rgb, shot.size)
+                    
+                    loop = asyncio.get_event_loop()
+                    png_bytes = await loop.run_in_executor(None, grab_screen)
+                    
+                    await websocket.send_text(json.dumps({"type": "status", "status": "Analyzing context..."}))
+                    
+                    # 2. Call Gemini Vision with Streaming
+                    def analyze_and_stream():
                         try:
-                            loop = asyncio.get_event_loop()
+                            from core.llm_manager import UnifiedLLM
+                            engine = UnifiedLLM(Path("config/api_keys.json"))
+                            if not engine.client:
+                                return "Error: Gemini API key missing."
+                            
+                            sys_prompt = (
+                                "You are Cluely, an invisible tactical overlay. "
+                                "Analyze the provided screenshot and user context. "
+                                "Be concise, direct, and use Markdown for formatting."
+                            )
+                            
+                            live_audio_context = get_live_transcript()
+                            
+                            full_prompt = sys_prompt + f"\n\nUser Notes: {text_context}"
+                            if live_audio_context:
+                                full_prompt += f"\n\nLive Audio Transcript (Last 60s):\n{live_audio_context}"
+                            
+                            response_iter = engine.client.models.generate_content_stream(
+                                model="gemini-1.5-flash",
+                                contents=[
+                                    full_prompt,
+                                    {"mime_type": "image/png", "data": png_bytes}
+                                ]
+                            )
+                            
+                            for chunk in response_iter:
+                                if chunk.text:
+                                    if loop.is_running():
+                                        asyncio.run_coroutine_threadsafe(
+                                            websocket.send_text(json.dumps({"type": "token", "text": chunk.text})),
+                                            loop
+                                        )
+                            
+                            # Final token to mark completion
                             if loop.is_running():
                                 asyncio.run_coroutine_threadsafe(
-                                    websocket.send_text(json.dumps({"type": "token", "text": text})),
+                                    websocket.send_text(json.dumps({"type": "token", "text": ""})),
                                     loop
                                 )
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            print(f"[Cluely] Vision Analysis Error: {e}")
+                            if loop.is_running():
+                                asyncio.run_coroutine_threadsafe(
+                                    websocket.send_text(json.dumps({"type": "token", "text": f"\n\n*Error: {e}*"})),
+                                    loop
+                                )
+
+                    # Run the generation in background thread to avoid blocking main event loop
+                    threading.Thread(target=analyze_and_stream, daemon=True).start()
                     
-                    from agent.task_queue import get_queue
-                    task_id = get_queue().submit(
-                        goal=f"Context from screen/user: {text_context}\n\nProvide a concise analysis or answer.", 
-                        priority="high", 
-                        speak=cluely_speak
-                    )
-                    await websocket.send_text(json.dumps({"type": "status", "status": f"Task {task_id} submitted"}))
             except json.JSONDecodeError:
                 pass
     except Exception:
