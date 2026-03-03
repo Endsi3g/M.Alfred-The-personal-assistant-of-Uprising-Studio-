@@ -29,10 +29,18 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-echo [4/4] Initializing Skills Arsenal...
+echo [4/5] Initializing Skills Arsenal...
 python scripts/update_skills.py
 if %errorlevel% neq 0 (
     echo [WARN] Skill indexing had issues.
+)
+
+echo [5/5] Installing Cluely Overlay Dependencies...
+cd cluely-overlay
+call npm install
+cd ..
+if %errorlevel% neq 0 (
+    echo [WARN] Node.js dependencies failed to install. Ensure Node.js is installed.
 )
 
 echo.
