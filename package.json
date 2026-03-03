@@ -1,5 +1,8 @@
 {
+  "name": "alfred-project-bell",
+  "version": "3.2.0",
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0"
   }
 }
+

@@ -49,11 +49,12 @@ Alfred is a next-generation, Batman-inspired digital majordomo. Unlike tradition
 
 ## ⚔️ Core Capabilities
 
+- **Visual Intelligence**: Integrated VLM support (Gemini 1.5 Flash) for real-time screen analysis and understanding.
+- **Multi-tier Persistent Memory**: Robust SQLite-backed memory system with semantic search capabilities (text-embedding-004).
 - **RAG Intelligence Loop**: Dynamically retrieves expertise from an indexed arsenal of 968+ technical skills.
 - **Batcave Tactical UI**: Premium dark/gold dashboard with real-time log telemetry.
 - **Multi-Agent Orchestration**: Integrated with **CoPaw** for complex team-based operations.
 - **Advanced Web Maneuvers**: **SeleniumBase** integration for bypassing bot detection and complex scraping.
-- **Self-Improvement Protocol**: Alfred analyzes his own mission failures and autonomously updates his operational directives.
 
 ---
 
@@ -65,13 +66,16 @@ graph TD
     UI --> |Mission| Planner[Tactical Planner]
     Planner --> |Retrieve Skills| RAG[SkillRetriever]
     RAG --> |968 Skills| Index[(Skills Index)]
+    Planner --> |Capture Screen| Vision[ScreenCap]
+    Planner --> |Memory Engine| Mem[Memory Manager]
+    Mem --> |Persistent| DB[(SQLite DB)]
+    Mem --> |Embeddings| Embed[Embedding Service]
     Planner --> |Execute| Actions[Tactical Actions]
     Actions --> |Browser| SB[SeleniumBase]
-    Actions --> |System| Disk[Windows Control]
     Actions --> |LLM| UnifiedLLM[Model Switcher/Ollama]
-    UnifiedLLM --> |Logs| Reflection[Self-Improvement Loop]
-    Reflection --> |Update| Protocols[INSTRUCTIONS_AI.md]
+    UnifiedLLM --> |Vision Analysis| GEMINI[Gemini VLM]
 ```
+
 
 ---
 

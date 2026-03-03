@@ -2,6 +2,29 @@
 
 All notable changes to the Alfred system will be documented in this mission log.
 
+## [3.2.0] - 2026-03-02
+
+### Vision & Visual Intelligence (Milestone 3)
+
+- **VLM Integration**: Integrated Gemini 1.5 Flash for real-time screen understanding.
+- **Tactical Screen Capture**: Implemented `ScreenCap` utility in `core/vision_tools.py` using high-performance `mss` capture.
+- **Visual Description**: Alfred can now "see" and describe the user's screen content upon request.
+
+### Multi-Tier Persistent Memory (Milestone 3)
+
+- **SQL Storage Engine**: Replaced JSON file-based memory with a robust SQLite backend (`memory/alfred_memory.db`).
+- **Episodic Context**: Conversation episodes are now stored persistently, allowing Alfred to remember context across sessions.
+- **Semantic Search**: Implemented embedding-based search using `text-embedding-004` via `core/embedding_service.py`.
+- **Hybrid Retrieval**: Added text-based fallback search for interactions where embeddings might be unavailable.
+
+## Milestone 4: Windows HUD & Pro Distribution
+
+### Infrastructure & Stability
+
+- **Ollama Client**: Added `ollama` as a core dependency for local model fallbacks.
+- **Enhanced Logging**: Improved test and system logs with ASCII-safe formatting for Windows compatibility.
+- **Milestone 3 Verification**: Validated all core components with a new specialized test suite (`tests/test_vision.py`, `tests/test_memory_db.py`, `tests/test_semantic.py`).
+
 ## [3.1.0] - 2026-03-02
 
 ### Multi-Agent Orchestration (Milestone 2)
