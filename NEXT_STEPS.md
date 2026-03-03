@@ -11,7 +11,6 @@ Strategic roadmap for upcoming milestones and tactical improvements.
 - [x] Add episodic memory for conversation context across sessions
 - [x] Build semantic search over past interactions
 
-
 ## Milestone 4: Windows HUD & Pro Distribution
 
 - [ ] Develop an always-on overlay HUD (transparent widget on desktop)
@@ -21,7 +20,7 @@ Strategic roadmap for upcoming milestones and tactical improvements.
 
 ## Technical Debt & Improvements
 
-- [ ] Add `.gitignore` for `__pycache__/`, `node_modules/`, `.env`
+- [x] Add `.gitignore` for `__pycache__/`, `node_modules/`, `.env`
 - [ ] Migrate remaining `google-generativeai` references to `google-genai`
 - [ ] Implement proper async event loop management across all agents
 - [ ] Add structured logging (replace print statements with `logging`)
