@@ -353,6 +353,42 @@ async def websocket_endpoint(websocket: WebSocket):
     except:
         if websocket in active_websockets: active_websockets.remove(websocket)
 
+@app.websocket("/ws/cluely")
+async def cluely_websocket(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        while True:
+            data = await websocket.receive_text()
+            try:
+                payload = json.loads(data)
+                action = payload.get("action")
+                
+                if action == "assist" and jarvis_instance:
+                    text_context = payload.get("context", "")
+                    
+                    def cluely_speak(text: str):
+                        try:
+                            loop = asyncio.get_event_loop()
+                            if loop.is_running():
+                                asyncio.run_coroutine_threadsafe(
+                                    websocket.send_text(json.dumps({"type": "token", "text": text})),
+                                    loop
+                                )
+                        except Exception:
+                            pass
+                    
+                    from agent.task_queue import get_queue
+                    task_id = get_queue().submit(
+                        goal=f"Context from screen/user: {text_context}\n\nProvide a concise analysis or answer.", 
+                        priority="high", 
+                        speak=cluely_speak
+                    )
+                    await websocket.send_text(json.dumps({"type": "status", "status": f"Task {task_id} submitted"}))
+            except json.JSONDecodeError:
+                pass
+    except Exception:
+        pass
+
 async def broadcast(data: dict):
     msg = json.dumps(data)
     for ws in active_websockets:
