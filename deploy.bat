@@ -22,7 +22,7 @@ if %errorlevel% neq 0 (
 )
 
 echo [3/4] Running Alfred's Smart Setup...
-python setup.py
+python scripts/setup.py
 if %errorlevel% neq 0 (
     echo [ERROR] Setup protocol failed.
     pause

@@ -263,7 +263,7 @@ HTML_TEMPLATE = """
             const div = document.createElement('div');
             const isYou = text.toLowerCase().startsWith('you:');
             div.className = 'log-line ' + (isYou ? 'log-you' : 'log-ai');
-            div.innerHTML = `<strong>${isYou ? 'BELL' : 'ALFRED'}:</strong> ${text.replace(/^[A-Za-z]+:\s*/, '')}`;
+            div.innerHTML = `<strong>${isYou ? 'BELL' : 'ALFRED'}:</strong> ${text.replace(/^[A-Za-z]+:\\s*/, '')}`;
             const consoleView = document.getElementById('console-view');
             consoleView.appendChild(div);
             consoleView.scrollTop = consoleView.scrollHeight;

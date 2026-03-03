@@ -6,10 +6,11 @@ Strategic roadmap for upcoming milestones and tactical improvements.
 
 ## Milestone 3: Vision (VLM) & Multi-tier Memory
 
-- [ ] Integrate a Vision-Language Model for real-time screen understanding
-- [ ] Implement persistent long-term memory (SQLite or Redis-backed)
-- [ ] Add episodic memory for conversation context across sessions
-- [ ] Build semantic search over past interactions
+- [x] Integrate a Vision-Language Model for real-time screen understanding
+- [x] Implement persistent long-term memory (SQLite or Redis-backed)
+- [x] Add episodic memory for conversation context across sessions
+- [x] Build semantic search over past interactions
+
 
 ## Milestone 4: Windows HUD & Pro Distribution
 

@@ -15,4 +15,8 @@ comtypes
 pycaw
 win10toast
 duckduckgo-search
+pystray
+fastapi
+uvicorn
+ollama
 youtube-transcript-api

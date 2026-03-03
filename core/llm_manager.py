@@ -66,6 +66,28 @@ class UnifiedLLM:
             print(f"[UnifiedLLM] Ollama Error: {e}")
             return "Error: Both Gemini and Ollama failed to respond."
 
+    def analyze_vision(self, prompt: str, image_bytes: bytes) -> str:
+        """
+        Uses Gemini to analyze an image (screen capture).
+        """
+        if not self.client:
+            return "Error: Gemini client not initialized for vision."
+
+        try:
+            # We use gemini-1.5-flash for vision as it is fast and capable
+            response = self.client.models.generate_content(
+                model="gemini-1.5-flash",
+                contents=[
+                    prompt,
+                    {'mime_type': 'image/png', 'data': image_bytes}
+                ]
+            )
+            return response.text
+        except Exception as e:
+            print(f"[UnifiedLLM] Vision Analysis Error: {e}")
+            return f"Error analyzing vision: {e}"
+
     def list_models(self):
+
         # Specific models for Gemini/Ollama could be handled here if needed
         pass
